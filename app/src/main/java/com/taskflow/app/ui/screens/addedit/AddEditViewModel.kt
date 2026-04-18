@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.taskflow.app.data.repository.TaskRepository
 import com.taskflow.app.domain.model.Priority
 import com.taskflow.app.domain.model.Task
+import com.taskflow.app.domain.model.TaskCategory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,15 +21,20 @@ data class AddEditUiState(
     val description: String = "",
     val dueDate: LocalDate? = null,
     val priority: Priority = Priority.MEDIUM,
+    val category: TaskCategory = TaskCategory.PERSONAL,
+    val reminderEnabled: Boolean = false,
+    val reminderTime: Long? = null,
+    val isCompleted: Boolean = false,
     val isEditing: Boolean = false,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
+    val isDeleted: Boolean = false,
     val titleError: String? = null
 )
 
 class AddEditViewModel(
     private val repository: TaskRepository,
-    taskId: Long? = null
+    private val taskId: Long? = null
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddEditUiState())
@@ -56,6 +62,10 @@ class AddEditViewModel(
                                 .toLocalDate()
                         },
                         priority = task.priorityLevel,
+                        category = task.category,
+                        reminderEnabled = task.reminderEnabled,
+                        reminderTime = task.reminderTime,
+                        isCompleted = task.isCompleted,
                         isEditing = true,
                         isLoading = false
                     )
@@ -82,6 +92,18 @@ class AddEditViewModel(
         _uiState.update { it.copy(priority = priority) }
     }
 
+    fun onCategoryChange(category: TaskCategory) {
+        _uiState.update { it.copy(category = category) }
+    }
+
+    fun onReminderToggle(enabled: Boolean) {
+        _uiState.update { it.copy(reminderEnabled = enabled) }
+    }
+
+    fun onCompletionToggle(completed: Boolean) {
+        _uiState.update { it.copy(isCompleted = completed) }
+    }
+
     fun saveTask() {
         val currentState = _uiState.value
 
@@ -102,18 +124,21 @@ class AddEditViewModel(
                 Priority.LOW -> 3
             }
 
+            val existingTask = if (currentState.isEditing) {
+                repository.getTaskById(currentState.taskId!!)
+            } else null
+
             val task = Task(
                 id = currentState.taskId ?: 0,
                 title = currentState.title.trim(),
                 description = currentState.description.trim().takeIf { it.isNotBlank() },
                 dueDate = dueDateMillis,
                 priority = priorityInt,
-                isCompleted = false,
-                createdAt = if (currentState.isEditing) {
-                    repository.getTaskById(currentState.taskId!!)?.createdAt ?: System.currentTimeMillis()
-                } else {
-                    System.currentTimeMillis()
-                },
+                isCompleted = currentState.isCompleted,
+                category = currentState.category,
+                reminderEnabled = currentState.reminderEnabled,
+                reminderTime = currentState.reminderTime,
+                createdAt = existingTask?.createdAt ?: System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             )
 
@@ -124,6 +149,16 @@ class AddEditViewModel(
             }
 
             _uiState.update { it.copy(isLoading = false, isSaved = true) }
+        }
+    }
+
+    fun deleteTask() {
+        val currentState = _uiState.value
+        if (currentState.taskId != null) {
+            viewModelScope.launch {
+                repository.deleteTaskById(currentState.taskId)
+                _uiState.update { it.copy(isDeleted = true) }
+            }
         }
     }
 

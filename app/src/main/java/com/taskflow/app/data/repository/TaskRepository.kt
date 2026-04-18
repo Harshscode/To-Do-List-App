@@ -3,6 +3,7 @@ package com.taskflow.app.data.repository
 import com.taskflow.app.data.local.TaskDao
 import com.taskflow.app.data.local.TaskEntity
 import com.taskflow.app.domain.model.Task
+import com.taskflow.app.domain.model.TaskCategory
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -57,6 +58,11 @@ class TaskRepository(private val taskDao: TaskDao) {
     }
 
     private fun TaskEntity.toTask(): Task {
+        val categoryEnum = try {
+            TaskCategory.valueOf(category)
+        } catch (e: Exception) {
+            TaskCategory.PERSONAL
+        }
         return Task(
             id = id,
             title = title,
@@ -64,6 +70,9 @@ class TaskRepository(private val taskDao: TaskDao) {
             dueDate = dueDate,
             priority = priority,
             isCompleted = isCompleted,
+            category = categoryEnum,
+            reminderEnabled = reminderEnabled,
+            reminderTime = reminderTime,
             createdAt = createdAt,
             updatedAt = updatedAt
         )
@@ -77,6 +86,9 @@ class TaskRepository(private val taskDao: TaskDao) {
             dueDate = dueDate,
             priority = priority,
             isCompleted = isCompleted,
+            category = category.name,
+            reminderEnabled = reminderEnabled,
+            reminderTime = reminderTime,
             createdAt = createdAt,
             updatedAt = updatedAt
         )

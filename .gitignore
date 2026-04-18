@@ -44,4 +44,5 @@ local.properties
 proguard-rules.pro
 
 # Local histories
-local/
+# Changed from local/ to avoid ignoring com.taskflow.app.data.local package
+.local/

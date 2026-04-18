@@ -56,6 +56,9 @@ fun TaskFlowApp() {
                 },
                 onTaskClick = { taskId ->
                     navController.navigate(Screen.EditTask.createRoute(taskId))
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }

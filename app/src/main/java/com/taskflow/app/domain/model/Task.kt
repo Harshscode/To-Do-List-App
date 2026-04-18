@@ -10,6 +10,9 @@ data class Task(
     val dueDate: Long? = null,
     val priority: Int = 2,
     val isCompleted: Boolean = false,
+    val category: TaskCategory = TaskCategory.PERSONAL,
+    val reminderEnabled: Boolean = false,
+    val reminderTime: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -50,4 +53,12 @@ data class Task(
 
 enum class Priority {
     HIGH, MEDIUM, LOW
+}
+
+enum class TaskCategory(val displayName: String, val colorHex: Long) {
+    PERSONAL("Personal", 0xFF2196F3),    // Blue
+    WORK("Work", 0xFF9C27B0),            // Purple
+    SHOPPING("Shopping", 0xFF4CAF50),    // Green
+    HEALTH("Health", 0xFFF44336),        // Red
+    OTHER("Other", 0xFF9E9E9E)           // Gray
 }
